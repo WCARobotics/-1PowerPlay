@@ -63,14 +63,15 @@ public class Testing extends LinearOpMode {
                 arm("UP", 1000);
                move(1, 1,1,1,200);
                rest(200);
-               move(1,1,-1,-1,1100);
+               move(1,1,-1,-1,1000);
                rest(500);
                arm("UP", 500);
-               move(1,1, -1,-1,1100);
+               move(1,1, -1,-1,1000);
         rest(500);
         move(1, 1,1,1,500);
         rest(500);
-        move(-1,-1,1,1,280);
+        move(-1,-1,1,1,260);
+        move(1,1,1,1, 250);
         rest(500);
         arm("UP", 500);
         open(500);
