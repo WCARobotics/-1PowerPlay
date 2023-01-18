@@ -34,9 +34,12 @@ public class encodersTest extends LinearOpMode {
 
     //list that stores the power of the wheels, [0] is front right, [1] is front left, [2] is back left, [3] is back right
     double[] wheels = new double[4];
-    public int leftPos;
-    public int rightPos;
-    public int armPos;
+    public int leftFrontPos;
+    public int rightFrontPos;
+    public int leftBackPos;
+    public int rightBackPos;
+    public int armLeftPos;
+    public int armRightPos;
 
     public void runOpMode() {
         frontLeftWheel = hardwareMap.get(DcMotor.class, "front left"); // 1 on the expansion hub for config
@@ -67,9 +70,12 @@ public class encodersTest extends LinearOpMode {
         backRightWheel.setDirection(DcMotor.Direction.REVERSE);
         arm.setDirection(DcMotorSimple.Direction.REVERSE);
         arm2.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftPos = 0;
-        rightPos = 0;
-        armPos = 0;
+        leftFrontPos = 0;
+        rightFrontPos = 0;
+        leftBackPos = 0;
+        rightBackPos = 0;
+        armLeftPos = 0;
+        armRightPos = 0;
         waitForStart();
         //Get into position to aim the camera
         arm("UP", 550);
@@ -111,13 +117,17 @@ public class encodersTest extends LinearOpMode {
     }
     //functions
     public void move(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower, int target) {
-        leftPos += target;
-        rightPos += target;
+        leftFrontPos += target*frontLeftPower;
+        rightFrontPos += target*frontRightPower;
+        leftBackPos += target*backLeftPower;
+        rightBackPos += target*backRightPower;
+
+
         //Setting the target positions
-        frontLeftWheel.setTargetPosition(leftPos);
-        frontRightWheel.setTargetPosition(rightPos);
-        backLeftWheel.setTargetPosition(leftPos);
-        backRightWheel.setTargetPosition(rightPos);
+        frontLeftWheel.setTargetPosition(leftFrontPos);
+        frontRightWheel.setTargetPosition(rightFrontPos);
+        backLeftWheel.setTargetPosition(leftBackPos);
+        backRightWheel.setTargetPosition(rightBackPos);
         //Setting the mode
         frontLeftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -179,9 +189,10 @@ public class encodersTest extends LinearOpMode {
     }
     public void arm(String direction, int target) {
         if (direction.equals("UP")) {
-            armPos += target;
-            arm.setTargetPosition(armPos);
-            arm2.setTargetPosition(-armPos);
+            armRightPos += target;
+            armLeftPos-=target;
+            arm.setTargetPosition(armRightPos);
+            arm2.setTargetPosition(armLeftPos);
             arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm.setPower(.1);
@@ -191,9 +202,10 @@ public class encodersTest extends LinearOpMode {
             }
         }
         else if (direction.equals("DOWN")) {
-            armPos += target;
-            arm.setTargetPosition(-armPos);
-            arm2.setTargetPosition(armPos);
+            armRightPos -= target;
+            armLeftPos += target;
+            arm.setTargetPosition(armRightPos);
+            arm2.setTargetPosition(armLeftPos);
             arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm.setPower(.1);
