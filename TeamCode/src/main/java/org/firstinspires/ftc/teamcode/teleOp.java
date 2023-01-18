@@ -13,7 +13,7 @@ public class teleOp extends OpMode {
    //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
    //expansion hub: arm = 0, arm2 is 1
    public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm, arm2;
-   public CRServo claw, claw2;
+
    //the variables that keep track of movement
    double x, y, theta, power, sin, cos, max, armSpeed, turnSpeed;
    //armExtension Value
@@ -27,10 +27,9 @@ public class teleOp extends OpMode {
       frontRightWheel = hardwareMap.get(DcMotor.class, "front right");
       backLeftWheel = hardwareMap.get(DcMotor.class, "back left");
       backRightWheel = hardwareMap.get(DcMotor.class, "back right");
-      arm = hardwareMap.get(DcMotor.class, "arm motor");
-      arm2 = hardwareMap.get(DcMotor.class, "arm motor 2");
-      claw = hardwareMap.get(CRServo.class, "claw");
-      claw2 = hardwareMap.get(CRServo.class, "claw 2");
+      arm = hardwareMap.get(DcMotor.class, "right arm motor");
+      arm2 = hardwareMap.get(DcMotor.class, "left arm motor");
+
 
 
       //set direction for motors
@@ -123,21 +122,21 @@ public class teleOp extends OpMode {
          arm2.setPower(0);
       }
       //claw controls
-      if(gamepad1.x){
+      /*if(gamepad1.x){
          claw.setPower(1.0);
          claw2.setPower(-1.0);
       }else if(gamepad1.b) {
          claw.setPower(-1.0);
          claw2.setPower(1.0);
       }
-
+*/
    }
    //method for setting each wheel's power in order for the robot to move properly
    public void move ( double[] wheels){
-      frontLeftWheel.setPower(wheels[1]/1.25);
-      backLeftWheel.setPower(wheels[2]/1.25);
-      frontRightWheel.setPower(wheels[0]/1.25);
-      backRightWheel.setPower(wheels[3]/1.25);
+      frontLeftWheel.setPower(wheels[1]);
+      backLeftWheel.setPower(wheels[2]);
+      frontRightWheel.setPower(wheels[0]);
+      backRightWheel.setPower(wheels[3]);
    }
 }
 
