@@ -72,18 +72,18 @@ public class encodersTest extends LinearOpMode {
         armPos = 0;
         waitForStart();
         //Get into position to aim the camera
-        /*arm("UP", 550);
+        arm("UP", 550);
         forward(1,100);
         rest(200);
         flip();
-        rest(500);*/
+        rest(500);
         //Move the robot to the high junctions and then drop a cone
-        /*flip();
+        flip();
         rest(500);
 
-         */
-        forward(1,30000);
-        /*rest(500);
+
+        forward(1,6000);
+        rest(500);
         arm("UP", 250);
         turnLeft(1,300);
         forward(1,400);
@@ -102,7 +102,7 @@ public class encodersTest extends LinearOpMode {
         //Move to the targetted parking space
 
 
-*/
+
 
 
 
@@ -110,25 +110,40 @@ public class encodersTest extends LinearOpMode {
 
     }
     //functions
-    public void move(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower, int duration) {
-        leftPos += duration;
-        rightPos += duration;
+    public void move(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower, int target) {
+        leftPos += target;
+        rightPos += target;
+        //Setting the target positions
         frontLeftWheel.setTargetPosition(leftPos);
         frontRightWheel.setTargetPosition(rightPos);
         backLeftWheel.setTargetPosition(leftPos);
         backRightWheel.setTargetPosition(rightPos);
+        //Setting the mode
         frontLeftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backLeftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backRightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+        //Setting the power of the motor
         frontLeftWheel.setPower(frontLeftPower);
         backLeftWheel.setPower(backLeftPower);
         frontRightWheel.setPower(frontRightPower);
         backRightWheel.setPower(backRightPower);
-
-        sleep(duration);
+        while(opModeIsActive() && motorActive()){
+            idle();
+        }
     }
+    public boolean motorActive(){
+        if(frontLeftWheel.isBusy() && frontRightWheel.isBusy()){
+            if(backLeftWheel.isBusy() && backRightWheel.isBusy()){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
     public void forward(double power, int duration){
         move(power,power,power,power,duration);
     }
@@ -162,19 +177,39 @@ public class encodersTest extends LinearOpMode {
         frontRightWheel.setPower(frontRightPower);
         backRightWheel.setPower(backRightPower);
     }
-    public void arm(String direction, int duration) {
+    public void arm(String direction, int target) {
         if (direction.equals("UP")) {
+            armPos += target;
+            arm.setTargetPosition(armPos);
+            arm2.setTargetPosition(-armPos);
+            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm.setPower(.1);
-            arm2.setPower(-0.1);
-            sleep(duration);
+            arm2.setPower(0.1);
+            while(opModeIsActive() && armActive()){
+                idle();
+            }
         }
         else if (direction.equals("DOWN")) {
-            arm.setPower(-.1);
+            armPos += target;
+            arm.setTargetPosition(-armPos);
+            arm2.setTargetPosition(armPos);
+            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            arm.setPower(.1);
             arm2.setPower(0.1);
-            sleep(duration);
+            while(opModeIsActive() && armActive()){
+                idle();
+            }
         }
-        arm.setPower(0);
-        arm2.setPower(0);
+
+    }
+    public boolean armActive(){
+        if(arm.isBusy() && arm2.isBusy()){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 
