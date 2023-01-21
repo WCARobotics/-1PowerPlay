@@ -18,8 +18,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
-@Autonomous(name = "encodersTest")
-public class encodersTest extends LinearOpMode {
+@Autonomous(name = "rightSideAuto")
+public class rightSideAuto extends LinearOpMode {
 
 
     //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
@@ -103,7 +103,7 @@ public class encodersTest extends LinearOpMode {
         arm("UP", 550);
 
         forward(1, 500);
-         
+
 
         rest(500);
         //tensorflow
