@@ -26,6 +26,7 @@ public class encodersTest extends LinearOpMode {
     //expansion hub: arm = 0, arm2 is 1
     public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm, arm2;
 
+    public CRServo leftSide, rightSide, flipper, claw;
 
     public DistanceSensor backDistanceSensor, leftDistanceSensor, rightDistanceSensor;
     //the variables that keep track of movement
@@ -40,6 +41,21 @@ public class encodersTest extends LinearOpMode {
     public int rightBackPos;
     public int armLeftPos;
     public int armRightPos;
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/powerPlayModel.tflite";
+
+
+    private static final String[] LABELS = {
+            "Number One",
+            "Number Two",
+            "Number Three"
+    };
+
+    private static final String VUFORIA_KEY =
+            "AY+LAO//////AAABmXqpfGFoHkhWrS1QLc/3RBMitc3sWaySydW66iqgCgULFQBcw/vHIj1o9YeqLzsHNYgoJ4bigISHSEJ0aqFhiZ1r+rRJ0HhFgL4V88oT/6FlJFzRDwhtVX+72HEoEIZgiH2vZD5i5mQp11U9rz+oE/07CwUzmABaW9i4gI50lPJhve1K6xRd4ydgjVhdiJ/Ayz6X8mK+LBnX10KxS0cCEtbCi2texH/X9W+iMXoXk9bzfnKi8X0xJxOAO9F5R2Ja9wBvEZrQQFhf/e4wegFY3fTYqsKtRTaENLYtQFuPqelbRuFRR2qcIZ9Q677IXEM+Ydagzu1bj2lBc6ueZf5SYn0iaPOIWRp4ilLNlRj5wyZ4";
+
+    private VuforiaLocalizer vuforia;
+
+    private TFObjectDetector tfod;
 
     public void runOpMode() {
         frontLeftWheel = hardwareMap.get(DcMotor.class, "front left"); // 1 on the expansion hub for config
@@ -54,6 +70,10 @@ public class encodersTest extends LinearOpMode {
         backRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        claw = hardwareMap.get(CRServo.class, "claw");
+        flipper = hardwareMap.get(CRServo.class, "flipper");
+        leftSide = hardwareMap.get(CRServo.class, "leftSide");
+        rightSide = hardwareMap.get(CRServo.class, "rightSide");
 
         /*backDistanceSensor = hardwareMap.get(DistanceSensor.class, "back distance sensor");
         leftDistanceSensor = hardwareMap.get(DistanceSensor.class, "left distance sensor");
@@ -78,44 +98,213 @@ public class encodersTest extends LinearOpMode {
         armRightPos = 0;
         waitForStart();
         //Get into position to aim the camera
+        close(100);
+        flipUp();
         arm("UP", 550);
-        forward(1,100);
-        rest(200);
-        flip();
+
+        forward(1, 500);
+         
+
         rest(500);
+        //tensorflow
+        initVuforia();
+        initTfod();
+        if (tfod != null) {
+            tfod.activate();
+            tfod.setZoom(1.0, 16.0 / 9.0);
+        }
+        telemetry.addData(">", "Press Play to start op mode");
+        telemetry.update();
+
+        // put the code that goes before the checking here
+        //close the arm to grab the cone and then pick it up and then move forward to the cone and then do a 180 rotation to scan
+
+        String recogniton1 = "";
+        int count = 0;
+        while (recogniton1.equals("") && count < 4) {
+            if (tfod != null) {
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                if (updatedRecognitions != null) {
+                    telemetry.addData("# Objects Detected", updatedRecognitions.size());
+
+                    for (Recognition recognition : updatedRecognitions) {
+                        double col = (recognition.getLeft() + recognition.getRight()) / 2;
+                        double row = (recognition.getTop() + recognition.getBottom()) / 2;
+                        double width = Math.abs(recognition.getRight() - recognition.getLeft());
+                        double height = Math.abs(recognition.getTop() - recognition.getBottom());
+                        telemetry.addData("", " ");
+                        telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100);
+                        telemetry.addData("- Position (Row/Col)", "%.0f / %.0f", row, col);
+                        telemetry.addData("- Size (Width/Height)", "%.0f / %.0f", width, height);
+                        recogniton1 = recognition.getLabel();
+                    }
+
+                    telemetry.update();
+                    if (recogniton1.equals("Number One")) { //red
+
+                        autonmousMovement();
+                       left(1,1000);
+                        rest(1000);
+                    } else if (recogniton1.equals("Number Two")) { //blue
+
+                        autonmousMovement();
+                        rest(1000);
+
+                    } else if (recogniton1.equals("Number three ")) { //green
+
+                        autonmousMovement();
+                       right(1,1000);
+                        rest(1000);
+                    } else { //if it is not recognized
+                        rest(500);
+                        move(-1, -1, -1, -1, 100);
+                        rest(1000);
+                        count++;
+                    }
+                }
+            }
+        }
+        if (recogniton1.equals("")) {
+
+            autonmousMovement();
+        }
+
+        //Move to the targetted parking space
+
+    }
+
+    public void autonmousMovement(){
+        //next to cone at start
+        //goes to the middle tile between the low and medium junction
         //Move the robot to the high junctions and then drop a cone
         flip();
         rest(500);
 
 
-        forward(1,6000);
+        forward(1, 5400);
         rest(500);
-        arm("UP", 250);
-        turnLeft(1,300);
-        forward(1,400);
-
+        arm("UP", 1000);
+        turnLeft(1, 2000);
+        forward(1, 1000);
+        flipDown();
+        open(100);
         rest(500);
         //Center the robot on the mat to then go and pick up a new cone
-        backward(1,500);
-        turnRight(1,400);
+        backward(1, 1000);
+        turnRight(1, 1500);
         rightNine();
-        forward(1,1000);
+        forward(1, 2500);
+
+        arm("DOWN", 1000);
+        rest(500);
+        close(100);
+        rest(500);
         //Move the robot back to the high junction
-        backward(1,1100);
+        backward(1, 2500);
         leftNine();
-        turnLeft(1,600);
-        forward(1,400);
+        turnLeft(1, 2000);
+        forward(1, 1000);
         //Move to the targetted parking space
 
 
+        //Move the robot to the high junctions and then drop a cone
+
+        flip();
+
+        rest(500);
 
 
+        forward(1, 5400);
 
+        rest(500);
 
+        arm("UP", 1000);
 
+        turnLeft(1, 2000);
 
+        forward(1, 1000);
+
+        flipDown();
+
+        open(100);
+
+        rest(500);
+
+        //Center the robot on the mat to then go and pick up a new cone
+        backward(1, 1000);
+
+        turnRight(1, 1500);
+
+        rightNine();
+
+        forward(1, 2500);
+
+        arm("DOWN", 1000);
+
+        rest(500);
+
+        close(100);
+
+        rest(500);
+
+        //Move the robot back to the high junction
+        backward(1, 2500);
+
+        leftNine();
+
+        turnLeft(1, 2000);
+
+        forward(1, 1000);
+        backward(1,1000);
+        turnRight(1,2000);
     }
+    private void initVuforia() {
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+    }
+
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.7f;
+        tfodParameters.isModelTensorFlow2 = true;
+        tfodParameters.inputSize = 300;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromFile(TFOD_MODEL_FILE, LABELS);
+    }
+
     //functions
+    public void flipUp(){
+        rightSide.setPower(1);
+        leftSide.setPower(-1);
+        flipper.setPower(1);
+        sleep(100);
+        rightSide.setPower(0);
+        leftSide.setPower(0);
+        flipper.setPower(0);
+    }
+    public void flipDown(){
+        rightSide.setPower(-1);
+        leftSide.setPower(1);
+        flipper.setPower(-1);
+        sleep(100);
+        rightSide.setPower(0);
+        leftSide.setPower(0);
+        flipper.setPower(0);
+    }
+    public void open(int duration){
+        claw.setPower(-1);
+
+        sleep(duration);
+    }
+    public void close(int duration){
+        claw.setPower(1);
+
+        sleep(duration);
+    }
     public void move(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower, int target) {
         leftFrontPos += target*frontLeftPower;
         rightFrontPos += target*frontRightPower;
@@ -173,13 +362,13 @@ public class encodersTest extends LinearOpMode {
         move(-power,-power,power,power,duration);
     }
     public void flip(){
-        move(-1,-1,1,1, 1750);
+        move(-1,-1,1,1, 5100);
     }
     public void rightNine(){
-        move(1,1,-1,-1, 1000);
+        move(1,1,-1,-1, 2550);
     }
     public void leftNine(){
-        move(-1,-1,1,1, 750);
+        move(-1,-1,1,1, 2550);
     }
     public void continuousMove(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower) {
         frontLeftWheel.setPower(frontLeftPower);
@@ -195,11 +384,13 @@ public class encodersTest extends LinearOpMode {
             arm2.setTargetPosition(armLeftPos);
             arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            arm.setPower(.1);
-            arm2.setPower(0.1);
-            while(opModeIsActive() && armActive()){
+            arm.setPower(1);
+            arm2.setPower(1);
+           /* while(opModeIsActive() && armActive()){
                 idle();
             }
+
+            */
         }
         else if (direction.equals("DOWN")) {
             armRightPos -= target;
@@ -208,21 +399,25 @@ public class encodersTest extends LinearOpMode {
             arm2.setTargetPosition(armLeftPos);
             arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            arm.setPower(.1);
-            arm2.setPower(0.1);
-            while(opModeIsActive() && armActive()){
+            arm.setPower(1);
+            arm2.setPower(1);
+            /*while(opModeIsActive() && armActive()){
                 idle();
             }
+
+             */
         }
 
     }
-    public boolean armActive(){
+   /* public boolean armActive(){
         if(arm.isBusy() && arm2.isBusy()){
             return true;
         }else{
             return false;
         }
     }
+
+    */
 
 
 

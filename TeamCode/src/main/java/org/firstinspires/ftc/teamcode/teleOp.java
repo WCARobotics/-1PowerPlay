@@ -13,6 +13,7 @@ public class teleOp extends OpMode {
    //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
    //expansion hub: arm = 0, arm2 is 1
    public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm, arm2;
+   public CRServo leftSide, rightSide, flipper, claw;
 
    //the variables that keep track of movement
    double x, y, theta, power, sin, cos, max, armSpeed, turnSpeed;
@@ -23,12 +24,17 @@ public class teleOp extends OpMode {
 
    public void init() {
       //initializes the variables
-      frontLeftWheel = hardwareMap.get(DcMotor.class, "front left");
+      frontLeftWheel = hardwareMap.get(DcMotor.class,  "front left");
       frontRightWheel = hardwareMap.get(DcMotor.class, "front right");
       backLeftWheel = hardwareMap.get(DcMotor.class, "back left");
       backRightWheel = hardwareMap.get(DcMotor.class, "back right");
       arm = hardwareMap.get(DcMotor.class, "right arm motor");
       arm2 = hardwareMap.get(DcMotor.class, "left arm motor");
+      claw = hardwareMap.get(CRServo.class, "claw");
+      flipper = hardwareMap.get(CRServo.class, "flipper");
+      leftSide = hardwareMap.get(CRServo.class, "leftSide");
+      rightSide = hardwareMap.get(CRServo.class, "rightSide");
+
 
 
 
@@ -41,6 +47,7 @@ public class teleOp extends OpMode {
       backRightWheel.setDirection(DcMotor.Direction.REVERSE);
       arm.setDirection(DcMotorSimple.Direction.REVERSE);
       arm2.setDirection(DcMotorSimple.Direction.REVERSE);
+
    }
 
    public void loop() {
@@ -122,14 +129,25 @@ public class teleOp extends OpMode {
          arm2.setPower(0);
       }
       //claw controls
-      /*if(gamepad1.x){
-         claw.setPower(1.0);
-         claw2.setPower(-1.0);
-      }else if(gamepad1.b) {
-         claw.setPower(-1.0);
-         claw2.setPower(1.0);
+      while(gamepad1.y){
+         rightSide.setPower(1);
+         leftSide.setPower(-1);
+         flipper.setPower(1);
       }
-*/
+      while(gamepad1.a){
+         rightSide.setPower(-1);
+         leftSide.setPower(1);
+         flipper.setPower(-1);
+      }
+      rightSide.setPower(0);
+      leftSide.setPower(0);
+
+      if(gamepad1.b){
+         open();
+      }else if(gamepad1.x) {
+         close();
+      }
+
    }
    //method for setting each wheel's power in order for the robot to move properly
    public void move ( double[] wheels){
@@ -137,6 +155,30 @@ public class teleOp extends OpMode {
       backLeftWheel.setPower(wheels[2]);
       frontRightWheel.setPower(wheels[0]);
       backRightWheel.setPower(wheels[3]);
+   }
+   public void flipUp(){
+      rightSide.setPower(1);
+      leftSide.setPower(-1);
+
+      rightSide.setPower(0);
+      leftSide.setPower(0);
+   }
+   public void flipDown(){
+      rightSide.setPower(-1);
+      leftSide.setPower(1);
+
+      rightSide.setPower(0);
+      leftSide.setPower(0);
+   }
+   public void open(){
+      claw.setPower(-1);
+
+
+   }
+   public void close(){
+      claw.setPower(1);
+
+
    }
 }
 

@@ -35,6 +35,7 @@ public class NewTesting extends LinearOpMode {
     //list that stores the power of the wheels, [0] is front right, [1] is front left, [2] is back left, [3] is back right
     double[] wheels = new double[4];
 
+
     public void runOpMode() {
         frontLeftWheel = hardwareMap.get(DcMotor.class, "front left"); // 1 on the expansion hub for config
         frontRightWheel = hardwareMap.get(DcMotor.class, "front right"); // 0 on the expansion hub for config
