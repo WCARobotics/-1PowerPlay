@@ -19,8 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
-@Autonomous(name = "rightSideAuto")
-public class rightSideAuto extends LinearOpMode {
+@Autonomous(name = "fullRightAuto")
+public class fullRightAuto extends LinearOpMode {
 
 
     //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
@@ -145,7 +145,7 @@ public class rightSideAuto extends LinearOpMode {
                     if (recogniton1.equals("Number One")) { //red
 
                         autonmousMovement();
-                       left(1,1000);
+                        left(1,1000);
                         rest(1000);
                     } else if (recogniton1.equals("Number Two")) { //blue
 
@@ -155,7 +155,7 @@ public class rightSideAuto extends LinearOpMode {
                     } else if (recogniton1.equals("Number three ")) { //green
 
                         autonmousMovement();
-                       right(1,1000);
+                        right(1,1000);
                         rest(1000);
                     } else { //if it is not recognized
                         rest(500);

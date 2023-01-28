@@ -7,33 +7,58 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="Tele-Op")
 public class teleOp extends OpMode {
    //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
    //expansion hub: arm = 0, arm2 is 1
-   public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm, arm2;
-   public CRServo leftSide, rightSide, flipper, claw;
+   public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm2;
+   //posiitive claw means open and negative means closed
+   public CRServo claw;
 
+   public Servo flipper, leftSide, rightSide;
+   /*public CRServo leftSide, rightSide, claw;
+   public Servo flipper;
+
+    */
    //the variables that keep track of movement
    double x, y, theta, power, sin, cos, max, armSpeed, turnSpeed;
    //armExtension Value
 
    //list that stores the power of the wheels, [0] is front right, [1] is front left, [2] is back left, [3] is back right
    double[] wheels = new double[4];
-
+   public int leftFrontPos;
+   public int rightFrontPos;
+   public int leftBackPos;
+   public int rightBackPos;
+   public int armLeftPos;
+   public int armRightPos;
+   public int total;
+   public ElapsedTime mStateTime = new ElapsedTime();
+   public int servoState = 2;
    public void init() {
       //initializes the variables
       frontLeftWheel = hardwareMap.get(DcMotor.class,  "front left");
       frontRightWheel = hardwareMap.get(DcMotor.class, "front right");
       backLeftWheel = hardwareMap.get(DcMotor.class, "back left");
       backRightWheel = hardwareMap.get(DcMotor.class, "back right");
-      arm = hardwareMap.get(DcMotor.class, "right arm motor");
+
       arm2 = hardwareMap.get(DcMotor.class, "left arm motor");
       claw = hardwareMap.get(CRServo.class, "claw");
-      flipper = hardwareMap.get(CRServo.class, "flipper");
+      flipper = hardwareMap.get(Servo.class, "flipper");
+      leftSide = hardwareMap.get(Servo.class, "leftSide");
+      rightSide = hardwareMap.get(Servo.class, "rightSide");
+      arm2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+      /*
+      claw = hardwareMap.get(CRServo.class, "claw");
+      flipper = hardwareMap.get(Servo.class, "flipper");
       leftSide = hardwareMap.get(CRServo.class, "leftSide");
       rightSide = hardwareMap.get(CRServo.class, "rightSide");
+
+       */
 
 
 
@@ -45,12 +70,31 @@ public class teleOp extends OpMode {
       frontRightWheel.setDirection(DcMotor.Direction.REVERSE);
       backLeftWheel.setDirection(DcMotor.Direction.FORWARD);
       backRightWheel.setDirection(DcMotor.Direction.REVERSE);
-      arm.setDirection(DcMotorSimple.Direction.REVERSE);
-      arm2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+      arm2.setDirection(DcMotorSimple.Direction.REVERSE );
+      flipper.setDirection(Servo.Direction.FORWARD);
+      leftSide.setDirection(Servo.Direction.FORWARD);
+      rightSide.setDirection(Servo.Direction.REVERSE);
+
+
+      /*
+      flipper.setPosition(0);
+
+       */
+      leftFrontPos = 0;
+      rightFrontPos = 0;
+      leftBackPos = 0;
+      rightBackPos = 0;
+      armLeftPos = 0;
+      total = 0;
+
+
+
 
    }
 
    public void loop() {
+
       //coordinate position of the x value of the joystick
       x = gamepad1.left_stick_x;
       //coordinate position of the y value of the joystick
@@ -110,34 +154,79 @@ public class teleOp extends OpMode {
          //turn up
          //if(gamepad1.right_trigger > 0 && armExtensionValue<2){
          if (gamepad1.right_trigger > 0) {
-            arm.setPower(armSpeed);
-            arm2.setPower(-armSpeed);
+            //UP
+
+            armLeftPos += 10;
+            if(armLeftPos >= 11000){
+               armLeftPos = 11000;
+            }
+
+            arm2.setTargetPosition(armLeftPos);
+
+            arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            arm2.setPower(1);
             //armExtensionValue +=0.1;
          } else if (gamepad1.left_trigger > 0) {
-            arm.setPower(-armSpeed);
-            arm2.setPower(armSpeed);
-            //armExtensionValue -=0.1;
-            //if (armExtensionValue <0) {
-            //    armExtensionValue = 0;
-            //}
+
+            armLeftPos -= 10;
+            if(armLeftPos <= 0){
+               armLeftPos = 0;
+            }
+
+            arm2.setTargetPosition(armLeftPos);
+
+            arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            arm2.setPower(1);
+
+
          } else {
-            arm.setPower(0);
-            arm2.setPower(0);
+
+
+
          }
       } else {
-         arm.setPower(0);
-         arm2.setPower(0);
+
+
+
       }
       //claw controls
-      while(gamepad1.y){
-         rightSide.setPower(1);
-         leftSide.setPower(-1);
-         flipper.setPower(1);
+      if(gamepad1.b){
+         claw.setPower(-.7);
+      }else if(gamepad1.x){
+         claw.setPower(.7 );
       }
-      while(gamepad1.a){
-         rightSide.setPower(-1);
-         leftSide.setPower(1);
-         flipper.setPower(-1);
+      if(gamepad1.a){
+         rightSide.setPosition(0);
+         leftSide.setPosition(0);
+         mStateTime.reset();
+         servoState = 1;
+      }else if (gamepad1.y){
+         flipper.setPosition(.91);
+         mStateTime.reset();
+         servoState = 0;
+      }
+      if(servoState == 1 && mStateTime.time() >=3 ){
+         flipper.setPosition(0);
+         servoState  = 2;
+      }else if(servoState == 0 && mStateTime.time() >=3){
+         rightSide.setPosition(.91);
+         leftSide.setPosition(0.91);
+         servoState  = 2;
+      }
+
+      //claw controls
+      /*
+      if(gamepad1.y){
+         rightSide.setPower(-.75);
+         leftSide.setPower(.75);
+         flipper.setPosition(80);
+      }
+      if(gamepad1.a){
+         rightSide.setPower(.75);
+         leftSide.setPower(-.75);
+         flipper.setPosition(-80);
       }
       rightSide.setPower(0);
       leftSide.setPower(0);
@@ -148,6 +237,8 @@ public class teleOp extends OpMode {
          close();
       }
 
+       */
+
    }
    //method for setting each wheel's power in order for the robot to move properly
    public void move ( double[] wheels){
@@ -156,7 +247,7 @@ public class teleOp extends OpMode {
       frontRightWheel.setPower(wheels[0]);
       backRightWheel.setPower(wheels[3]);
    }
-   public void flipUp(){
+  /* public void flipUp(){
       rightSide.setPower(1);
       leftSide.setPower(-1);
 
@@ -171,15 +262,17 @@ public class teleOp extends OpMode {
       leftSide.setPower(0);
    }
    public void open(){
-      claw.setPower(-1);
+      claw.setPower(.75);
 
 
    }
    public void close(){
-      claw.setPower(1);
+      claw.setPower(-.75);
 
 
    }
+
+   */
 }
 
 
