@@ -21,19 +21,12 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 @Autonomous(name = "fullRightAuto")
 public class fullRightAuto extends LinearOpMode {
-
-    //Three = two, one = one, two = three
     //control hub: 0 is front right, 1 is front left, 2 is back left, 3 is back right
-    //expansion hub: arm = 0, arm2 is 1
-    public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm, arm2;
-
+    //expansion hub: arm 2 = 1, claw = 0, flipper = 1, leftSide = 2,
+    public DcMotor frontLeftWheel, frontRightWheel, backLeftWheel, backRightWheel, arm2;
     public CRServo claw;
-
     public Servo flipper, leftSide, rightSide;
-    public DistanceSensor backDistanceSensor, leftDistanceSensor, rightDistanceSensor;
-    //the variables that keep track of movement
-    double armSpeed, turnSpeed;
-    //armExtension Value
+
 
     //list that stores the power of the wheels, [0] is front right, [1] is front left, [2] is back left, [3] is back right
     double[] wheels = new double[4];
@@ -42,7 +35,6 @@ public class fullRightAuto extends LinearOpMode {
     public int leftBackPos;
     public int rightBackPos;
     public int armLeftPos;
-    public int armRightPos;
     private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/powerPlayTensorflow.tflite";
 
 
@@ -60,45 +52,37 @@ public class fullRightAuto extends LinearOpMode {
     private TFObjectDetector tfod;
 
     public void runOpMode() {
-        frontLeftWheel = hardwareMap.get(DcMotor.class, "front left"); // 1 on the expansion hub for config
-        frontRightWheel = hardwareMap.get(DcMotor.class, "front right"); // 0 on the expansion hub for config
-        backLeftWheel = hardwareMap.get(DcMotor.class, "back left"); // 2 on the expansion hub for config
-        backRightWheel = hardwareMap.get(DcMotor.class, "back right"); // 3 on the expansion hub for config
-        arm = hardwareMap.get(DcMotor.class, "right arm motor"); //0 on the control hun for config
-        arm2 = hardwareMap.get(DcMotor.class, "left arm motor"); //1 on the control hub for config
-        frontLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeftWheel = hardwareMap.get(DcMotor.class,  "front left");
+        frontRightWheel = hardwareMap.get(DcMotor.class, "front right");
+        backLeftWheel = hardwareMap.get(DcMotor.class, "back left");
+        backRightWheel = hardwareMap.get(DcMotor.class, "back right");
+        arm2 = hardwareMap.get(DcMotor.class, "left arm motor");
         claw = hardwareMap.get(CRServo.class, "claw");
         flipper = hardwareMap.get(Servo.class, "flipper");
         leftSide = hardwareMap.get(Servo.class, "leftSide");
         rightSide = hardwareMap.get(Servo.class, "rightSide");
-        /*backDistanceSensor = hardwareMap.get(DistanceSensor.class, "back distance sensor");
-        leftDistanceSensor = hardwareMap.get(DistanceSensor.class, "left distance sensor");
-        rightDistanceSensor = hardwareMap.get(DistanceSensor.class, "right distance sensor");
 
-         */
+        frontLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        //set direction for motors
-        //Old code: left is forward and right is backward
-        //New code: right is forward and left is backwards
         frontLeftWheel.setDirection(DcMotor.Direction.FORWARD);
         frontRightWheel.setDirection(DcMotor.Direction.REVERSE);
         backLeftWheel.setDirection(DcMotor.Direction.FORWARD);
         backRightWheel.setDirection(DcMotor.Direction.REVERSE);
-        arm.setDirection(DcMotorSimple.Direction.FORWARD);
-        arm2.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm2.setDirection(DcMotorSimple.Direction.REVERSE );
+        flipper.setDirection(Servo.Direction.FORWARD);
         leftSide.setDirection(Servo.Direction.FORWARD);
         rightSide.setDirection(Servo.Direction.REVERSE);
+
         leftFrontPos = 0;
         rightFrontPos = 0;
         leftBackPos = 0;
         rightBackPos = 0;
         armLeftPos = 0;
-        armRightPos = 0;
+
         waitForStart();
         flipUp();
         forward(1, 2200);
@@ -140,22 +124,108 @@ public class fullRightAuto extends LinearOpMode {
             }
         }
 
-            backward(1, 2200);
-        while (opModeIsActive()){
-            idle();
-        }
-        if(resultString.equals("Number One")){
+        backward(1, 2200);
+        rest(1000);
+        if (resultString.equals("Number One")) { //red
 
+            autonmousMovement();
+            left(1,1000);
+            rest(1000);
+        } else if (resultString.equals("Number Two")) { //blue
 
-        }else if (resultString.equals("Number Two")){
+            autonmousMovement();
+            rest(1000);
 
+        } else if (resultString.equals("Number three ")) { //green
 
-        }else if(resultString.equals("Number Three")){
-
-
+            autonmousMovement();
+            right(1,1000);
+            rest(1000);
         }
     }
+    public void autonmousMovement(){
+        //next to cone at start
+        //goes to the middle tile between the low and medium junction
+        //Move the robot to the high junctions and then drop a cone
+       flipDown();
 
+        forward(1, 5400);
+        rest(500);
+        arm("UP", 8000);
+        turnLeft(1, 2000);
+        forward(1, 1000);
+
+        open(100);
+        rest(500);
+        //Center the robot on the mat to then go and pick up a new cone
+        backward(1, 1000);
+        turnRight(1, 1500);
+        rightNine();
+        forward(1, 2500);
+
+        arm("DOWN", 8000);
+        rest(500);
+        close(100);
+        rest(500);
+        //Move the robot back to the high junction
+        backward(1, 2500);
+        leftNine();
+        turnLeft(1, 2000);
+        forward(1, 1000);
+        //Move to the targetted parking space
+
+
+        //Move the robot to the high junctions and then drop a cone
+
+        flip();
+
+        rest(500);
+
+
+        forward(1, 5400);
+
+        rest(500);
+
+        arm("UP", 1000);
+
+        turnLeft(1, 2000);
+
+        forward(1, 1000);
+
+
+
+        open(100);
+
+        rest(500);
+
+        //Center the robot on the mat to then go and pick up a new cone
+        backward(1, 1000);
+
+        turnRight(1, 1500);
+
+        rightNine();
+
+        forward(1, 2500);
+
+        arm("DOWN", 1000);
+
+        rest(500);
+
+        close(100);
+
+        rest(500);
+
+        //Move the robot back to the high junction
+        backward(1, 2500);
+
+        leftNine();
+
+        turnLeft(1, 2000);
+
+        forward(1, 1000);
+        backward(1,1000);
+        turnRight(1,2000);
+    }
 
 
 
@@ -279,13 +349,13 @@ backLeftWheel.setPower(backLeftPower);
     }
     public void arm(String direction, int target) {
         if (direction.equals("UP")) {
-            armRightPos += target;
+
             armLeftPos +=target;
-            arm.setTargetPosition(armRightPos);
+
             arm2.setTargetPosition(armLeftPos);
-            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            arm.setPower(1);
+
             arm2.setPower(1);
            /* while(opModeIsActive() && armActive()){
                 idle();
@@ -294,13 +364,13 @@ backLeftWheel.setPower(backLeftPower);
             */
         }
         else if (direction.equals("DOWN")) {
-            armRightPos -= target;
+
             armLeftPos -= target;
-            arm.setTargetPosition(armRightPos);
+
             arm2.setTargetPosition(armLeftPos);
-            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            arm.setPower(1);
+
             arm2.setPower(1);
             /*while(opModeIsActive() && armActive()){
                 idle();
