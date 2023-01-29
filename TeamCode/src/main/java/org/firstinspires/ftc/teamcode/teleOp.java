@@ -38,6 +38,7 @@ public class teleOp extends OpMode {
    public int total;
    public ElapsedTime mStateTime = new ElapsedTime();
    public int servoState = 2;
+   public int servoOpen = 1;
    public void init() {
       //initializes the variables
       frontLeftWheel = hardwareMap.get(DcMotor.class,  "front left");
@@ -115,9 +116,9 @@ public class teleOp extends OpMode {
 
       //controls when the robot turns by setting turnSpeed to a different value
       if (gamepad1.left_bumper) {
-         turnSpeed = -0.75;
+         turnSpeed = -1;
       } else if (gamepad1.right_bumper) {
-         turnSpeed = 0.75 ;
+         turnSpeed = 1 ;
       }
 
 
@@ -156,9 +157,9 @@ public class teleOp extends OpMode {
          if (gamepad1.right_trigger > 0) {
             //UP
 
-            armLeftPos += 10;
-            if(armLeftPos >= 11000){
-               armLeftPos = 11000;
+            armLeftPos += 12;
+            if(armLeftPos >= 12000){
+               armLeftPos = 12000;
             }
 
             arm2.setTargetPosition(armLeftPos);
@@ -169,7 +170,7 @@ public class teleOp extends OpMode {
             //armExtensionValue +=0.1;
          } else if (gamepad1.left_trigger > 0) {
 
-            armLeftPos -= 10;
+            armLeftPos -= 12;
             if(armLeftPos <= 0){
                armLeftPos = 0;
             }
@@ -193,26 +194,34 @@ public class teleOp extends OpMode {
       }
       //claw controls
       if(gamepad1.b){
-         claw.setPower(-.7);
+         claw.setPower(-.5);
+         mStateTime.reset();
+         servoOpen = 0;
       }else if(gamepad1.x){
-         claw.setPower(.7 );
+         claw.setPower(.5 );
+
+      }
+      if(servoOpen == 0 && mStateTime.time() >= 1){
+         claw.setPower(0);
+         servoOpen = 1;
       }
       if(gamepad1.a){
-         rightSide.setPosition(0);
-         leftSide.setPosition(0);
+         rightSide.setPosition(1);
+         leftSide.setPosition(1);
          mStateTime.reset();
          servoState = 1;
       }else if (gamepad1.y){
-         flipper.setPosition(.91);
+         rightSide.setPosition(0);
+         leftSide.setPosition(0);
+
          mStateTime.reset();
          servoState = 0;
       }
-      if(servoState == 1 && mStateTime.time() >=3 ){
-         flipper.setPosition(0);
+      if(servoState == 1 && mStateTime.time() >= 1 ){
+         flipper.setPosition(0.15);
          servoState  = 2;
-      }else if(servoState == 0 && mStateTime.time() >=3){
-         rightSide.setPosition(.91);
-         leftSide.setPosition(0.91);
+      }else if(servoState == 0 && mStateTime.time() >= 1){
+         flipper.setPosition(1);
          servoState  = 2;
       }
 
