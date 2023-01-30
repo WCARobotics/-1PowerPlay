@@ -84,6 +84,8 @@ public class fullRightAuto extends LinearOpMode {
         armLeftPos = 0;
 
         waitForStart();
+        close(500);
+        rest(500);
         flipUp();
         forward(1, 2200);
 
@@ -125,7 +127,7 @@ public class fullRightAuto extends LinearOpMode {
         }
 
         backward(1, 2200);
-        rest(1000);
+
         if (resultString.equals("Number One")) { //red
 
             autonmousMovement();
@@ -136,8 +138,12 @@ public class fullRightAuto extends LinearOpMode {
             autonmousMovement();
             rest(1000);
 
-        } else if (resultString.equals("Number three ")) { //green
+        } else if (resultString.equals("Number Three")) { //green
 
+            autonmousMovement();
+            right(1,1000);
+            rest(1000);
+        }else{
             autonmousMovement();
             right(1,1000);
             rest(1000);
@@ -147,15 +153,17 @@ public class fullRightAuto extends LinearOpMode {
         //next to cone at start
         //goes to the middle tile between the low and medium junction
         //Move the robot to the high junctions and then drop a cone
-       flipDown();
-
+        flipDown();
+        rest(1000);
         forward(1, 5400);
         rest(500);
-        arm("UP", 8000);
-        turnLeft(1, 2000);
-        forward(1, 1000);
+        arm("UP", 10000);
+        rest(5000);
+        turnLeft(1, 1500);
+        forward(1, 2000);
+        rest(1000);
 
-        open(100);
+        /*open(100);
         rest(500);
         //Center the robot on the mat to then go and pick up a new cone
         backward(1, 1000);
@@ -225,6 +233,8 @@ public class fullRightAuto extends LinearOpMode {
         forward(1, 1000);
         backward(1,1000);
         turnRight(1,2000);
+
+         */
     }
 
 
@@ -266,12 +276,13 @@ public class fullRightAuto extends LinearOpMode {
 
     }
     public void open(int duration){
-        claw.setPower(.75);
+        claw.setPower(-.5);
 
         sleep(duration);
+        claw.setPower(0);
     }
     public void close(int duration){
-        claw.setPower(-.75);
+        claw.setPower(.5);
 
         sleep(duration);
     }
@@ -293,12 +304,14 @@ public class fullRightAuto extends LinearOpMode {
         backLeftWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backRightWheel.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //Setting the power of the motor
+
         backRightWheel.setPower(backRightPower);
-
         frontLeftWheel.setPower(frontLeftPower);
-backLeftWheel.setPower(backLeftPower);
+        backLeftWheel.setPower(backLeftPower);
         frontRightWheel.setPower(frontRightPower);
-
+        while(opModeIsActive() && motorActive()){
+            idle();
+        }
 
 
     }

@@ -198,7 +198,7 @@ public class teleOp extends OpMode {
          mStateTime.reset();
          servoOpen = 0;
       }else if(gamepad1.x){
-         claw.setPower(.5 );
+         claw.setPower(.5);
 
       }
       if(servoOpen == 0 && mStateTime.time() >= 1){
@@ -211,17 +211,18 @@ public class teleOp extends OpMode {
          mStateTime.reset();
          servoState = 1;
       }else if (gamepad1.y){
-         rightSide.setPosition(0);
-         leftSide.setPosition(0);
+         flipper.setPosition(1);
+
 
          mStateTime.reset();
          servoState = 0;
       }
       if(servoState == 1 && mStateTime.time() >= 1 ){
-         flipper.setPosition(0.15);
+         flipper.setPosition(0);
          servoState  = 2;
       }else if(servoState == 0 && mStateTime.time() >= 1){
-         flipper.setPosition(1);
+         rightSide.setPosition(0);
+         leftSide.setPosition(0);
          servoState  = 2;
       }
 
