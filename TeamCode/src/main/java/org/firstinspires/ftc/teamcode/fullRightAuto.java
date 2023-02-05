@@ -37,7 +37,7 @@ public class fullRightAuto extends LinearOpMode {
     public int armLeftPos;
     private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/powerPlayTensorflow.tflite";
 
-
+    //The labels of each sleeve image
     private static final String[] LABELS = {
             "Number One",
             "Number Three",
@@ -76,20 +76,12 @@ public class fullRightAuto extends LinearOpMode {
         flipper.setDirection(Servo.Direction.FORWARD);
         leftSide.setDirection(Servo.Direction.FORWARD);
         rightSide.setDirection(Servo.Direction.REVERSE);
-
+        //encoder positions
         leftFrontPos = 0;
         rightFrontPos = 0;
         leftBackPos = 0;
         rightBackPos = 0;
         armLeftPos = 0;
-
-        waitForStart();
-        close(500);
-        rest(500);
-        flipUp();
-        forward(1, 2200);
-
-        //tensorflow
         initVuforia();
         initTfod();
         if (tfod != null) {
@@ -98,6 +90,17 @@ public class fullRightAuto extends LinearOpMode {
         }
         telemetry.addData(">", "Press Play to start op mode");
         telemetry.update();
+        waitForStart();
+        //closing the claw and then setting it up to scan the image
+        close(500);
+        flipUp();
+
+        rest(500);
+
+        forward(1, 2200);
+
+        //tensorflow
+
 
         // put the code that goes before the checking here
         //close the arm to grab the cone and then pick it up and then move forward to the cone and then do a 180 rotation to scan
@@ -119,31 +122,32 @@ public class fullRightAuto extends LinearOpMode {
                         telemetry.addData("- Size (Width/Height)", "%.0f / %.0f", width, height);
                         resultString = recognition.getLabel();
                     }
-
                     telemetry.update();
-
                 }
             }
         }
-
-        backward(1, 2200);
-
+        //resting the robot to go to the high juncition
+        backward(1, 1950);
+        left(1,3100);
+        rest(500);
         if (resultString.equals("Number One")) { //red
 
             autonmousMovement();
-            left(1,1000);
+            left(1,1700);
             rest(1000);
         } else if (resultString.equals("Number Two")) { //blue
 
             autonmousMovement();
+            right(1,1900);
             rest(1000);
 
         } else if (resultString.equals("Number Three")) { //green
 
             autonmousMovement();
-            right(1,1000);
+            right(1,4700);
             rest(1000);
         }else{
+            //incase no result happens
             autonmousMovement();
             right(1,1000);
             rest(1000);
@@ -154,96 +158,27 @@ public class fullRightAuto extends LinearOpMode {
         //goes to the middle tile between the low and medium junction
         //Move the robot to the high junctions and then drop a cone
         flipDown();
-        rest(1000);
+        arm("UP", 11000);
         forward(1, 5400);
-        rest(500);
-        arm("UP", 10000);
-        rest(5000);
-        turnLeft(1, 1500);
-        forward(1, 2000);
+        right(1,1700);
+        while (opModeIsActive() && arm2.isBusy()){
+            idle();
+        }
+        //dropping the cone
+        forward(1, 700);
         rest(1000);
+        open(500);
+        //getting ready to park
+        rest(1000);
+        flipUp();
+        backward(1,500);
+        flipUp();
+        arm("DOWN",12000);
 
-        /*open(100);
-        rest(500);
-        //Center the robot on the mat to then go and pick up a new cone
-        backward(1, 1000);
-        turnRight(1, 1500);
-        rightNine();
-        forward(1, 2500);
-
-        arm("DOWN", 8000);
-        rest(500);
-        close(100);
-        rest(500);
-        //Move the robot back to the high junction
-        backward(1, 2500);
-        leftNine();
-        turnLeft(1, 2000);
-        forward(1, 1000);
-        //Move to the targetted parking space
-
-
-        //Move the robot to the high junctions and then drop a cone
-
-        flip();
-
-        rest(500);
-
-
-        forward(1, 5400);
-
-        rest(500);
-
-        arm("UP", 1000);
-
-        turnLeft(1, 2000);
-
-        forward(1, 1000);
-
-
-
-        open(100);
-
-        rest(500);
-
-        //Center the robot on the mat to then go and pick up a new cone
-        backward(1, 1000);
-
-        turnRight(1, 1500);
-
-        rightNine();
-
-        forward(1, 2500);
-
-        arm("DOWN", 1000);
-
-        rest(500);
-
-        close(100);
-
-        rest(500);
-
-        //Move the robot back to the high junction
-        backward(1, 2500);
-
-        leftNine();
-
-        turnLeft(1, 2000);
-
-        forward(1, 1000);
-        backward(1,1000);
-        turnRight(1,2000);
-
-         */
+        while (opModeIsActive() && arm2.isBusy()){
+            idle();
+        }
     }
-
-
-
-
-        //Move to the targetted parking space
-
-
-
 
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -264,19 +199,24 @@ public class fullRightAuto extends LinearOpMode {
     }
 
     //functions
+
+    //flipping of the arm
     public void flipUp(){
         rightSide.setPosition(1);
         leftSide.setPosition(1);
-
+        sleep(500);
+        flipper.setPosition(0);
 
     }
     public void flipDown(){
         rightSide.setPosition(0);
         leftSide.setPosition(0);
-
+        sleep(500);
+        flipper.setPosition(1);
     }
+    //claw  controls
     public void open(int duration){
-        claw.setPower(-.5);
+        claw.setPower( -.5);
 
         sleep(duration);
         claw.setPower(0);
@@ -286,6 +226,7 @@ public class fullRightAuto extends LinearOpMode {
 
         sleep(duration);
     }
+    //movemnt controls
     public void move(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower, int target) {
         leftFrontPos += target*frontLeftPower;
         rightFrontPos += target*frontRightPower;
@@ -360,11 +301,14 @@ public class fullRightAuto extends LinearOpMode {
         frontRightWheel.setPower(frontRightPower);
         backRightWheel.setPower(backRightPower);
     }
+    //arm controls
     public void arm(String direction, int target) {
         if (direction.equals("UP")) {
 
             armLeftPos +=target;
-
+            if(armLeftPos >= 12000){
+                armLeftPos = 12000;
+            }
             arm2.setTargetPosition(armLeftPos);
 
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -379,7 +323,9 @@ public class fullRightAuto extends LinearOpMode {
         else if (direction.equals("DOWN")) {
 
             armLeftPos -= target;
-
+            if (armLeftPos <= 0){
+                armLeftPos = 0;
+            }
             arm2.setTargetPosition(armLeftPos);
 
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -393,18 +339,10 @@ public class fullRightAuto extends LinearOpMode {
         }
 
     }
-   /* public boolean armActive(){
-        if(arm.isBusy() && arm2.isBusy()){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    */
 
 
 
+    //resting everything
     public void rest(int duration) {
         frontLeftWheel.setPower(0);
         backLeftWheel.setPower(0);
